@@ -9,6 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tiptap/extension-text-align": "^3.19.0",
+    "@tiptap/extension-underline": "^3.19.0",
+    "@tiptap/react": "^3.19.0",
+    "@tiptap/starter-kit": "^3.19.0",
     "axios": "^1.6.7",
     "clsx": "^2.1.0",
     "framer-motion": "^11.0.5",

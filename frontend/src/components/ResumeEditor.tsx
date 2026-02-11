@@ -1,22 +1,28 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { jsPDF } from "jspdf";
+import dynamic from "next/dynamic";
 import {
   Edit3,
-  Download,
-  Copy,
-  Check,
   Plus,
   ArrowLeft,
   Lightbulb,
   Target,
   AlertCircle,
   Sparkles,
-  RotateCcw,
-  FileText,
+  Check,
 } from "lucide-react";
+
+// Dynamically import RichTextEditor to avoid SSR issues
+const RichTextEditor = dynamic(() => import("./RichTextEditor"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[500px] flex items-center justify-center bg-slate-50 rounded-xl">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+    </div>
+  ),
+});
 
 interface ResumeEditorProps {
   resumeText: string;
@@ -38,9 +44,7 @@ export default function ResumeEditor({
   onReanalyze,
 }: ResumeEditorProps) {
   const [editedText, setEditedText] = useState(resumeText);
-  const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"keywords" | "suggestions" | "skills">("keywords");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [insertedKeywords, setInsertedKeywords] = useState<Set<string>>(new Set());
 
   // Check which keywords are now in the text
@@ -54,72 +58,6 @@ export default function ResumeEditor({
     });
     setInsertedKeywords(nowPresent);
   }, [editedText, missingKeywords]);
-
-  const handleInsertKeyword = (keyword: string) => {
-    if (textareaRef.current) {
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const before = editedText.substring(0, start);
-      const after = editedText.substring(end);
-      const newText = before + keyword + after;
-      setEditedText(newText);
-      
-      // Focus and set cursor position after the inserted keyword
-      setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + keyword.length, start + keyword.length);
-      }, 0);
-    }
-  };
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(editedText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleDownload = () => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15;
-    const maxWidth = pageWidth - margin * 2;
-    const lineHeight = 6;
-    let yPosition = margin;
-
-    // Split text into lines that fit within page width
-    const lines = doc.splitTextToSize(editedText, maxWidth);
-
-    lines.forEach((line: string) => {
-      // Check if we need a new page
-      if (yPosition + lineHeight > pageHeight - margin) {
-        doc.addPage();
-        yPosition = margin;
-      }
-      doc.setFontSize(11);
-      doc.text(line, margin, yPosition);
-      yPosition += lineHeight;
-    });
-
-    doc.save("edited-resume.pdf");
-  };
-
-  const handleDownloadTxt = () => {
-    const blob = new Blob([editedText], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "edited-resume.txt";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleReset = () => {
-    setEditedText(resumeText);
-  };
 
   const keywordsRemaining = missingKeywords.filter(
     (kw) => !insertedKeywords.has(kw)
@@ -142,7 +80,7 @@ export default function ResumeEditor({
               Edit Your Resume
             </h3>
             <p className="text-slate-500 text-sm">
-              Add missing keywords and improve your resume based on suggestions
+              Format your resume, add missing keywords, then download as PDF
             </p>
           </div>
         </div>
@@ -179,65 +117,17 @@ export default function ResumeEditor({
       </motion.div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Editor Panel */}
+        {/* Rich Text Editor Panel */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            {/* Editor Toolbar */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
-              <span className="text-sm font-medium text-slate-600">
-                Resume Content
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-                  title="Reset to original"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Reset
-                </button>
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-4 h-4 text-green-500" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" />
-                      Copy
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={handleDownload}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  PDF
-                </button>
-                <button
-                  onClick={handleDownloadTxt}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-                >
-                  <FileText className="w-4 h-4" />
-                  TXT
-                </button>
-              </div>
-            </div>
-
-            {/* Textarea */}
-            <textarea
-              ref={textareaRef}
-              value={editedText}
-              onChange={(e) => setEditedText(e.target.value)}
-              className="w-full h-[500px] p-4 text-sm text-slate-800 font-mono leading-relaxed resize-none focus:outline-none"
-              placeholder="Your resume content..."
-            />
-          </div>
+          <RichTextEditor
+            content={editedText}
+            onChange={(html) => {
+              // Extract plain text for keyword checking
+              const div = document.createElement("div");
+              div.innerHTML = html;
+              setEditedText(div.textContent || "");
+            }}
+          />
         </div>
 
         {/* Suggestions Panel */}
@@ -279,7 +169,7 @@ export default function ResumeEditor({
                   Missing Keywords
                 </h4>
                 <p className="text-xs text-slate-500 mb-3">
-                  Click to insert at cursor position
+                  Copy keywords and paste them into your resume
                 </p>
 
                 {keywordsRemaining.length > 0 ? (
@@ -287,8 +177,9 @@ export default function ResumeEditor({
                     {keywordsRemaining.map((keyword) => (
                       <button
                         key={keyword}
-                        onClick={() => handleInsertKeyword(keyword)}
+                        onClick={() => navigator.clipboard.writeText(keyword)}
                         className="group flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-full text-sm transition-colors"
+                        title="Click to copy"
                       >
                         <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                         {keyword}
@@ -381,7 +272,7 @@ export default function ResumeEditor({
                   Missing Skills
                 </h4>
                 <p className="text-xs text-slate-500 mb-3">
-                  Click to insert skill into your resume
+                  Click to copy skill to clipboard
                 </p>
 
                 {missingSkills.length > 0 ? (
@@ -389,8 +280,9 @@ export default function ResumeEditor({
                     {missingSkills.slice(0, 15).map((skill) => (
                       <button
                         key={skill}
-                        onClick={() => handleInsertKeyword(skill)}
+                        onClick={() => navigator.clipboard.writeText(skill)}
                         className="group flex items-center gap-1 px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-full text-sm transition-colors"
+                        title="Click to copy"
                       >
                         <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                         {skill}
