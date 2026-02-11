@@ -84,7 +84,7 @@ export default function FeatureCards() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
             viewport={{ once: true }}
-            className="group p-6 bg-white/70 backdrop-blur-sm rounded-xl border border-slate-200 hover:border-transparent hover:shadow-xl transition-all duration-300 card-hover"
+            className="group p-6 bg-white/50 backdrop-blur-sm rounded-xl border border-slate-200/50 hover:bg-white/80 hover:shadow-xl transition-all duration-300 card-hover"
           >
             <div
               className={`w-12 h-12 rounded-xl ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
