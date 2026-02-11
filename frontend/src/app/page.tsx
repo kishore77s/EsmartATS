@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
 import FileUpload from "@/components/FileUpload";
 import JobDescriptionInput from "@/components/JobDescriptionInput";
 import ResultsPanel from "@/components/ResultsPanel";
@@ -12,6 +13,16 @@ import HowItWorks from "@/components/HowItWorks";
 import { analyzeResume, uploadResume } from "@/lib/api";
 import type { AnalysisResult } from "@/types";
 
+// Dynamically import Zoho PDF Editor to avoid SSR issues
+const ZohoPdfEditor = dynamic(() => import("@/components/ZohoPdfEditor"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-64 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+    </div>
+  ),
+});
+
 export default function Home() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeText, setResumeText] = useState<string>("");
@@ -20,7 +31,7 @@ export default function Home() {
   const [isUploading, setIsUploading] = useState(false);
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string>("");
-  const [step, setStep] = useState<"upload" | "job" | "results" | "edit">("upload");
+  const [step, setStep] = useState<"upload" | "job" | "results" | "edit" | "pdfEdit">("upload");
 
   const handleFileSelect = async (file: File) => {
     setResumeFile(file);
@@ -70,6 +81,10 @@ export default function Home() {
 
   const handleEditResume = () => {
     setStep("edit");
+  };
+
+  const handlePdfEdit = () => {
+    setStep("pdfEdit");
   };
 
   const handleReanalyze = async (newResumeText: string) => {
@@ -253,7 +268,7 @@ export default function Home() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
                     >
-                      <ResultsPanel results={results} onReset={handleReset} onEdit={handleEditResume} />
+                      <ResultsPanel results={results} onReset={handleReset} onEdit={handleEditResume} onPdfEdit={handlePdfEdit} />
                     </motion.div>
                   )}
 
@@ -272,6 +287,20 @@ export default function Home() {
                         missingSkills={results.skill_gap_analysis.missing_skills}
                         onBack={() => setStep("results")}
                         onReanalyze={handleReanalyze}
+                      />
+                    </motion.div>
+                  )}
+
+                  {step === "pdfEdit" && (
+                    <motion.div
+                      key="pdfEdit"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                    >
+                      <ZohoPdfEditor
+                        resumeText={resumeText}
+                        onClose={() => setStep("results")}
                       />
                     </motion.div>
                   )}

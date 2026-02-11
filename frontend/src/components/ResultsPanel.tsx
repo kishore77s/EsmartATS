@@ -1,13 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { RefreshCw, Download, CheckCircle, XCircle, Lightbulb, BarChart3, Target, Layers, Edit3 } from "lucide-react";
+import { RefreshCw, Download, CheckCircle, XCircle, Lightbulb, BarChart3, Target, Layers, Edit3, FileEdit } from "lucide-react";
 import ScoreCircle from "./ScoreCircle";
 import KeywordList from "./KeywordList";
 import SuggestionAccordion from "./SuggestionAccordion";
 import type { ResultsPanelProps } from "@/types";
 
-export default function ResultsPanel({ results, onReset, onEdit }: ResultsPanelProps) {
+export default function ResultsPanel({ results, onReset, onEdit, onPdfEdit }: ResultsPanelProps) {
   const {
     overall_score,
     keyword_score,
@@ -259,7 +259,16 @@ export default function ResultsPanel({ results, onReset, onEdit }: ResultsPanelP
             className="flex-1 px-6 py-3 bg-gradient-to-r from-accent-600 to-accent-500 text-white rounded-xl font-medium hover:from-accent-700 hover:to-accent-600 transition-all shadow-lg shadow-accent-500/25 flex items-center justify-center gap-2"
           >
             <Edit3 className="w-5 h-5" />
-            Edit Resume with Suggestions
+            Edit Resume
+          </button>
+        )}
+        {onPdfEdit && (
+          <button
+            onClick={onPdfEdit}
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-xl font-medium hover:from-purple-700 hover:to-purple-600 transition-all shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2"
+          >
+            <FileEdit className="w-5 h-5" />
+            Zoho PDF Editor
           </button>
         )}
         <button

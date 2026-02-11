@@ -57,6 +57,7 @@ export interface ResultsPanelProps {
   results: AnalysisResult;
   onReset: () => void;
   onEdit?: () => void;
+  onPdfEdit?: () => void;
 }
 
 export interface ScoreCircleProps {
