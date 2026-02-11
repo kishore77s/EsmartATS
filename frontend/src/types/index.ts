@@ -56,6 +56,7 @@ export interface JobDescriptionInputProps {
 export interface ResultsPanelProps {
   results: AnalysisResult;
   onReset: () => void;
+  onEdit?: () => void;
 }
 
 export interface ScoreCircleProps {

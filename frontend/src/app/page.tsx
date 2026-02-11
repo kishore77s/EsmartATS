@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import FileUpload from "@/components/FileUpload";
 import JobDescriptionInput from "@/components/JobDescriptionInput";
 import ResultsPanel from "@/components/ResultsPanel";
+import ResumeEditor from "@/components/ResumeEditor";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import FeatureCards from "@/components/FeatureCards";
 import HowItWorks from "@/components/HowItWorks";
@@ -19,7 +20,7 @@ export default function Home() {
   const [isUploading, setIsUploading] = useState(false);
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string>("");
-  const [step, setStep] = useState<"upload" | "job" | "results">("upload");
+  const [step, setStep] = useState<"upload" | "job" | "results" | "edit">("upload");
 
   const handleFileSelect = async (file: File) => {
     setResumeFile(file);
@@ -65,6 +66,26 @@ export default function Home() {
     setResults(null);
     setError("");
     setStep("upload");
+  };
+
+  const handleEditResume = () => {
+    setStep("edit");
+  };
+
+  const handleReanalyze = async (newResumeText: string) => {
+    setResumeText(newResumeText);
+    setError("");
+    setIsAnalyzing(true);
+
+    try {
+      const analysisResults = await analyzeResume(newResumeText, jobDescription);
+      setResults(analysisResults);
+      setStep("results");
+    } catch (err: any) {
+      setError(err.message || "Analysis failed. Please try again.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -113,10 +134,10 @@ export default function Home() {
                 {["Upload Resume", "Job Description", "Results"].map(
                   (label, index) => {
                     const stepKey = ["upload", "job", "results"][index];
-                    const isActive = step === stepKey;
+                    const isActive = step === stepKey || (step === "edit" && stepKey === "results");
                     const isCompleted =
                       (step === "job" && index === 0) ||
-                      (step === "results" && index <= 1);
+                      ((step === "results" || step === "edit") && index <= 1);
 
                     return (
                       <div
@@ -232,7 +253,26 @@ export default function Home() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
                     >
-                      <ResultsPanel results={results} onReset={handleReset} />
+                      <ResultsPanel results={results} onReset={handleReset} onEdit={handleEditResume} />
+                    </motion.div>
+                  )}
+
+                  {step === "edit" && results && (
+                    <motion.div
+                      key="edit"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                    >
+                      <ResumeEditor
+                        resumeText={resumeText}
+                        missingKeywords={results.missing_keywords}
+                        suggestions={results.suggestions}
+                        missingSections={results.sections_missing}
+                        missingSkills={results.skill_gap_analysis.missing_skills}
+                        onBack={() => setStep("results")}
+                        onReanalyze={handleReanalyze}
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>
