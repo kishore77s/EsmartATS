@@ -32,8 +32,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-green-50">
+      <body className={`${inter.className} min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-green-50 bg-fixed`}>
+        <div className="min-h-screen">
           {/* Header */}
           <header className="sticky top-0 z-50 glass border-b border-slate-200/50">
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
