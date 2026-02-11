@@ -1,8 +1,8 @@
 import axios from "axios";
 import type { UploadResponse, AnalysisResult, AnalyzeRequest } from "@/types";
 
-// API base URL - configured via environment variable
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// API base URL - uses /api for Vercel serverless functions, fallback to localhost for dev
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 // Create axios instance with default config
 const api = axios.create({
