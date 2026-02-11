@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { jsPDF } from "jspdf";
 import {
   Edit3,
   Download,
@@ -14,6 +15,7 @@ import {
   AlertCircle,
   Sparkles,
   RotateCcw,
+  FileText,
 } from "lucide-react";
 
 interface ResumeEditorProps {
@@ -78,6 +80,32 @@ export default function ResumeEditor({
   };
 
   const handleDownload = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    const maxWidth = pageWidth - margin * 2;
+    const lineHeight = 6;
+    let yPosition = margin;
+
+    // Split text into lines that fit within page width
+    const lines = doc.splitTextToSize(editedText, maxWidth);
+
+    lines.forEach((line: string) => {
+      // Check if we need a new page
+      if (yPosition + lineHeight > pageHeight - margin) {
+        doc.addPage();
+        yPosition = margin;
+      }
+      doc.setFontSize(11);
+      doc.text(line, margin, yPosition);
+      yPosition += lineHeight;
+    });
+
+    doc.save("edited-resume.pdf");
+  };
+
+  const handleDownloadTxt = () => {
     const blob = new Blob([editedText], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -189,7 +217,14 @@ export default function ResumeEditor({
                   className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
                 >
                   <Download className="w-4 h-4" />
-                  Download
+                  PDF
+                </button>
+                <button
+                  onClick={handleDownloadTxt}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  TXT
                 </button>
               </div>
             </div>
